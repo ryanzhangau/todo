@@ -1,15 +1,17 @@
 import React, { useState, useContext } from 'react';
 import TodoContext from '../TodoContext';
 import Input from '@material-ui/core/Input';
-import { Todo } from '../style/Todo.style';
+import { TodoFooter } from '../style/Todo.style';
 import AddIcon from '@material-ui/icons/Add';
+import NotificationImportantIcon from '@material-ui/icons/NotificationImportant';
 import shortid from 'shortid';
-
+import { sortTodo } from '../sortHelper';
 const AddTodo = () => {
   const { todos, setTodos } = useContext(TodoContext);
   const [newTask, setNewTask] = useState('');
+  const [important, setImportant] = useState(false);
   return (
-    <Todo>
+    <TodoFooter>
       <Input
         id='new-task'
         name='new-task'
@@ -20,14 +22,28 @@ const AddTodo = () => {
           'aria-label': 'New Task'
         }}
       />
+
+      <NotificationImportantIcon
+        style={{ cursor: 'pointer', color: important ? 'red' : '#aaa' }}
+        onClick={() => setImportant(!important)}
+      />
       <AddIcon
         style={{ cursor: 'pointer' }}
         onClick={() => {
-          setTodos([...todos, { id: shortid.generate(), label: newTask, complete: false }]);
-          setNewTask('');
+          if (newTask) {
+            const newTodo = [
+              ...todos,
+              { id: shortid.generate(), label: newTask, complete: false, important }
+            ];
+            const highPriority = newTodo.filter(todo => todo.important);
+            const lowPriority = newTodo.filter(todo => !todo.important);
+            setTodos([...sortTodo(highPriority, 'label'), ...sortTodo(lowPriority, 'label')]);
+            setNewTask('');
+            setImportant(false);
+          }
         }}
       />
-    </Todo>
+    </TodoFooter>
   );
 };
 
